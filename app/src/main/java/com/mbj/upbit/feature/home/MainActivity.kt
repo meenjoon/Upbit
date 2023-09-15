@@ -1,8 +1,9 @@
-package com.mbj.upbit
+package com.mbj.upbit.feature.home
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -31,13 +32,27 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.mbj.upbit.CoinApp
+import com.mbj.upbit.data.remote.network.repository.CoinInfoDataSource
+import com.mbj.upbit.data.remote.network.repository.CoinInfoRepository
+import com.mbj.upbit.feature.home.viewmodel.MainViewModel
+import com.mbj.upbit.feature.home.viewmodel.MainViewModelFactory
 import com.mbj.upbit.model.CoinInfo
 import com.mbj.upbit.model.CoinInfo.Companion.coinInfoItems
 import com.mbj.upbit.ui.theme.UpbitTheme
 
 class MainActivity : ComponentActivity() {
+
+    private val apiClient = CoinApp.appContainer.provideApiClient()
+    private val coinInfoDataSource = CoinInfoDataSource(apiClient)
+    private val coinInfoRepository = CoinInfoRepository(coinInfoDataSource)
+    private val viewModelFactory = MainViewModelFactory(coinInfoRepository)
+    private val viewModel: MainViewModel by viewModels {
+        viewModelFactory
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        viewModel
         setContent {
             UpbitTheme {
                 // A surface container using the 'background' color from the theme
