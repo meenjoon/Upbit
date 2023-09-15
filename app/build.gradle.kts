@@ -1,9 +1,14 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("kotlin-kapt")
     id("dagger.hilt.android.plugin")
 }
+
+val properties = Properties()
+properties.load(rootProject.file("local.properties").inputStream())
 
 android {
     namespace = "com.mbj.upbit"
@@ -15,6 +20,8 @@ android {
         targetSdk = 33
         versionCode = 1
         versionName = "1.0"
+
+        buildConfigField("String", "UPBIT_BASE_URL", properties.getProperty("upbit_base_url"))
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
