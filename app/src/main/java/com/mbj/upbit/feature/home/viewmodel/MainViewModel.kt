@@ -5,6 +5,8 @@ import androidx.lifecycle.viewModelScope
 import com.mbj.upbit.data.remote.model.CoinInfo
 import com.mbj.upbit.data.remote.network.adapter.ApiResultSuccess
 import com.mbj.upbit.data.remote.network.repository.CoinInfoRepository
+import com.mbj.upbit.data.remote.network.repository.UpbitWebSocketTickerManager
+import com.mbj.upbit.data.remote.network.repository.UpbitWebSocketTickerRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
@@ -20,6 +22,7 @@ class MainViewModel @Inject constructor(
     private val coinInfoRepository: CoinInfoRepository
 ) : ViewModel() {
 
+    private lateinit var webSocketTicker: UpbitWebSocketTickerRepository
     private val coinInfoList: StateFlow<List<CoinInfo>> = getCoinInfoList().stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(500),
@@ -30,6 +33,9 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             coinInfoList.collectLatest { response ->
                 val formattedMarkets = convertCoinInfoResponse(response)
+
+                webSocketTicker = UpbitWebSocketTickerRepository(UpbitWebSocketTickerManager(formattedMarkets))
+                webSocketTicker.startWebSocketConnection()
             }
         }
     }
@@ -49,10 +55,15 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    fun convertCoinInfoResponse(response: List<CoinInfo>): String {
+    private fun convertCoinInfoResponse(response: List<CoinInfo>): String {
         val krwMarkets = response
             .filter { it.market.startsWith("KRW-") }
             .map { it.market }
         return krwMarkets.joinToString(",")
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        webSocketTicker.closeWebSocketConnection()
     }
 }
