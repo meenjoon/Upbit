@@ -32,24 +32,16 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.mbj.upbit.CoinApp
-import com.mbj.upbit.data.remote.network.repository.CoinInfoDataSource
-import com.mbj.upbit.data.remote.network.repository.CoinInfoRepository
 import com.mbj.upbit.feature.home.viewmodel.MainViewModel
-import com.mbj.upbit.feature.home.viewmodel.MainViewModelFactory
 import com.mbj.upbit.model.CoinInfo
 import com.mbj.upbit.model.CoinInfo.Companion.coinInfoItems
 import com.mbj.upbit.ui.theme.UpbitTheme
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
-    private val apiClient = CoinApp.appContainer.provideApiClient()
-    private val coinInfoDataSource = CoinInfoDataSource(apiClient)
-    private val coinInfoRepository = CoinInfoRepository(coinInfoDataSource)
-    private val viewModelFactory = MainViewModelFactory(coinInfoRepository)
-    private val viewModel: MainViewModel by viewModels {
-        viewModelFactory
-    }
+    private val viewModel: MainViewModel by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         viewModel

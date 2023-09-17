@@ -14,8 +14,11 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.onCompletion
+import javax.inject.Inject
 
-class CoinInfoDataSource(private val apiClient: ApiClient) : CoinAppNetworkApi {
+class CoinInfoDataSource @Inject constructor(
+    private val apiClient: ApiClient
+) : CoinAppNetworkApi {
 
     private val defaultDispatcher: CoroutineDispatcher = Dispatchers.Default
 

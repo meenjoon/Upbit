@@ -1,16 +1,7 @@
 package com.mbj.upbit
 
 import android.app.Application
-import com.mbj.upbit.data.remote.network.AppContainer
+import dagger.hilt.android.HiltAndroidApp
 
-class CoinApp : Application() {
-
-    override fun onCreate() {
-        super.onCreate()
-        appContainer = AppContainer()
-    }
-
-    companion object {
-        lateinit var appContainer: AppContainer
-    }
-}
+@HiltAndroidApp
+class CoinApp : Application()
