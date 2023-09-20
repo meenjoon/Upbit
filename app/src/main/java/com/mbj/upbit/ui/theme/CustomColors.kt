@@ -25,6 +25,7 @@ class CustomColors {
         val Orange700 = Color(0xFFF33527)
         val Blue300 = Color(0xFF4F47D8)
         val Navy300 = Color(0xFF21202B)
+        val Navy100 = Color(0xFF333142)
         val Grey100 = Color(0xB4F0EEFF)
         val Grey500 = Color(0xFF8D8383)
         val zeroChangeTextColor: Color
@@ -32,6 +33,6 @@ class CustomColors {
             get() = if (darkTheme) Color.White else Color.Black
         val zeroChangeBoxColor: Color
             @Composable
-            get() = if (darkTheme) Navy300 else Grey100
+            get() = if (darkTheme) Navy100 else Grey100
     }
 }
