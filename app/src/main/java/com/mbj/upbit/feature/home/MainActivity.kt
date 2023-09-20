@@ -25,34 +25,43 @@ import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.mbj.upbit.R
+import com.mbj.upbit.data.remote.model.CoinInfo
+import com.mbj.upbit.data.remote.model.CoinInfoDetail
+import com.mbj.upbit.data.remote.model.UpbitTickerResponse
 import com.mbj.upbit.feature.home.viewmodel.MainViewModel
-import com.mbj.upbit.model.CoinInfo
-import com.mbj.upbit.model.CoinInfo.Companion.coinInfoItems
+import com.mbj.upbit.feature.util.formatted.CoinInfoFormatter.formatChangePrice
+import com.mbj.upbit.feature.util.formatted.CoinInfoFormatter.formatChangeRate
+import com.mbj.upbit.feature.util.formatted.CoinInfoFormatter.formatCurrentPrice
+import com.mbj.upbit.feature.util.formatted.CoinInfoFormatter.formatMarketName
+import com.mbj.upbit.feature.util.formatted.CoinInfoFormatter.formatTradePrice
 import com.mbj.upbit.ui.theme.UpbitTheme
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
-    private val viewModel: MainViewModel by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        viewModel
         setContent {
+
             UpbitTheme {
-                // A surface container using the 'background' color from the theme
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colors.background
                 ) {
-                    FilterCoinInfo(coinInfoItems)
+                    FilterCoinInfo()
                 }
             }
         }
@@ -60,7 +69,13 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun FilterCoinInfo(coinInfoItems: List<CoinInfo>) {
+fun FilterCoinInfo() {
+    val viewModel: MainViewModel = hiltViewModel()
+
+    val upbitTickerResponses by viewModel.upbitTickerResponses.collectAsState(emptyMap())
+    val coinInfoList by viewModel.coinInfoList.collectAsState(emptyList())
+    val combinedDataList = viewModel.combineTickerAndCoinInfo(upbitTickerResponses, coinInfoList)
+
     Column {
         Row(
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -74,7 +89,7 @@ fun FilterCoinInfo(coinInfoItems: List<CoinInfo>) {
                 modifier = Modifier.padding(start = 20.dp)
             ) {
                 Text(
-                    text = "한글명",
+                    text = stringResource(R.string.korean_name),
                     fontSize = 14.sp,
                 )
                 Column {
@@ -95,7 +110,7 @@ fun FilterCoinInfo(coinInfoItems: List<CoinInfo>) {
                 modifier = Modifier.padding(start = 50.dp)
             ) {
                 Text(
-                    text = "현재가",
+                    text = stringResource(R.string.currency_price),
                     fontSize = 14.sp,
                 )
                 Column {
@@ -113,7 +128,7 @@ fun FilterCoinInfo(coinInfoItems: List<CoinInfo>) {
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    text = "전일 대비",
+                    text = stringResource(R.string.net_change),
                     fontSize = 14.sp,
                 )
                 Column {
@@ -134,7 +149,7 @@ fun FilterCoinInfo(coinInfoItems: List<CoinInfo>) {
                 modifier = Modifier.padding(end = 20.dp)
             ) {
                 Text(
-                    text = "거래대금",
+                    text = stringResource(R.string.trading_value),
                     fontSize = 14.sp,
                 )
                 Column {
@@ -157,15 +172,16 @@ fun FilterCoinInfo(coinInfoItems: List<CoinInfo>) {
             modifier = Modifier.padding(top = 4.dp)
         )
         LazyColumn {
-            items(coinInfoItems) { item ->
-                CoinInfoItem(item)
+            items(combinedDataList) { combinedData ->
+                CoinInfoItem(coinInfoDetail = combinedData)
             }
         }
     }
 }
 
 @Composable
-fun CoinInfoItem(coinInfo: CoinInfo) {
+fun CoinInfoItem(coinInfoDetail: CoinInfoDetail) {
+
     Spacer(modifier = Modifier.padding(top = 2.dp))
     Row(
         horizontalArrangement = Arrangement.Start,
@@ -189,57 +205,71 @@ fun CoinInfoItem(coinInfo: CoinInfo) {
                     .size(20.dp)
             )
             Spacer(modifier = Modifier.padding(end = 4.dp))
-            Column(
+            Column( //코인명
                 horizontalAlignment = Alignment.Start,
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        text = coinInfo.name,
+                        text = coinInfoDetail.coinInfo.koreanName,
                         fontSize = 12.sp,
                         modifier = Modifier.padding(end = 4.dp)
                     )
                     Icon(
                         imageVector = Icons.Filled.Info,
-                        contentDescription = null
+                        contentDescription = null,
+                        modifier = Modifier.size(12.dp)
                     )
                 }
                 Text(
-                    text = coinInfo.coinNameAbbreviation,
+                    text = formatMarketName(coinInfoDetail.coinInfo.market),
                     fontSize = 8.sp,
                 )
             }
         }
-        Column(
+        Column( //현재가
             horizontalAlignment = Alignment.End,
-            modifier = Modifier.width(60.dp),
+            modifier = Modifier.width(65.dp),
         ) {
             Text(
-                text = coinInfo.currentPrice.toString(),
+                text = "${
+                    coinInfoDetail.upbitTickerResponse.currentPrice?.let {
+                        formatCurrentPrice(
+                            it
+                        )
+                    }
+                }",
                 fontSize = 12.sp,
             )
         }
-        Spacer(modifier = Modifier.padding(end = 40.dp))
+        Spacer(modifier = Modifier.padding(end = 10.dp))
 
-        Column(
-            horizontalAlignment = Alignment.End
+        Column( //전일대비
+            horizontalAlignment = Alignment.End,
+            modifier = Modifier.width(65.dp)
         ) {
             Text(
-                text = "${coinInfo.percentComparedPreviousDay}%",
+                text = "${formatChangeRate(coinInfoDetail.upbitTickerResponse.signedChangeRate)}%",
                 fontSize = 12.sp,
             )
             Text(
-                text = "${coinInfo.moneyComparedPreviousDay}",
+                text = "${formatChangePrice(coinInfoDetail.upbitTickerResponse.signedChangePrice)}",
                 fontSize = 10.sp,
             )
         }
-        Spacer(modifier = Modifier.padding(end = 20.dp))
+        Spacer(modifier = Modifier.padding(end = 10.dp))
 
-        Column(
+        Column( //거래대금
             horizontalAlignment = Alignment.End,
             modifier = Modifier.fillMaxWidth()
         ) {
             Text(
-                text = "${coinInfo.transactionPayment}백만",
+                text = "${
+                    coinInfoDetail.upbitTickerResponse.tradeVolumeInKRW?.let {
+                        formatTradePrice(
+                            it
+                        )
+                    }
+                }",
                 fontSize = 12.sp,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
@@ -253,11 +283,11 @@ fun CoinInfoItem(coinInfo: CoinInfo) {
     )
 }
 
-@Preview(showBackground = true)
 @Composable
+@Preview(showBackground = true)
 fun FilterCoinInfoPreview() {
     UpbitTheme {
-        FilterCoinInfo(coinInfoItems)
+        FilterCoinInfo()
     }
 }
 
@@ -266,13 +296,47 @@ fun FilterCoinInfoPreview() {
 fun CoinInfoItemPreview() {
     UpbitTheme {
         CoinInfoItem(
-            coinInfo = CoinInfo(
-                name = "비트토렌트",
-                coinNameAbbreviation = "BTT/KRW",
-                currentPrice = 0.0006,
-                percentComparedPreviousDay = 0.00,
-                moneyComparedPreviousDay = 0.0000,
-                transactionPayment = 171
+            coinInfoDetail = CoinInfoDetail(
+                coinInfo = CoinInfo(
+                    market = "KRW-BTC",
+                    koreanName = "비트코인",
+                    englishName = "Bitcoin"
+                ),
+                upbitTickerResponse = UpbitTickerResponse(
+                    type = "ticker",
+                    code = "KRW-BTC",
+                    openingPrice = 3.6509E7,
+                    highPrice = 3.6743E7,
+                    lowPrice = 3.6319E7,
+                    tradePrice = 3.6456E7,
+                    prevClosingPrice = 3.65E7,
+                    accTradePrice = 4.444947990314178E10,
+                    change = "FALL",
+                    changePrice = 44000.0,
+                    signedChangePrice = -44000.0,
+                    changeRate = 0.0012054795,
+                    signedChangeRate = -0.0012054795,
+                    askBid = "ASK",
+                    tradeVolume = 0.05,
+                    accTradeVolume = 1217.70517272,
+                    tradeDate = "20230920",
+                    tradeTime = "070428",
+                    tradeTimestamp = 1695193468351,
+                    accAskVolume = 657.65432189,
+                    accBidVolume = 560.05085083,
+                    highest52WeekPrice = 4.1569E7,
+                    highest52WeekDate = "2023-06-30",
+                    lowest52WeekPrice = 2.07E7,
+                    lowest52WeekDate = "2022-12-30",
+                    marketState = "ACTIVE",
+                    isTradingSuspended = false,
+                    delistingDate = null,
+                    marketWarning = "NONE",
+                    timestamp = 1695193470054,
+                    accTradePrice24h = 1.2513542340670654E11,
+                    accTradeVolume24h = 3430.84591112,
+                    streamType = "REALTIME"
+                )
             )
         )
     }
