@@ -18,7 +18,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.KeyboardArrowRight
@@ -40,14 +39,14 @@ import com.mbj.upbit.data.remote.model.CoinInfo
 import com.mbj.upbit.data.remote.model.CoinInfoDetail
 import com.mbj.upbit.data.remote.model.UpbitTickerResponse
 import com.mbj.upbit.feature.home.viewmodel.MainViewModel
-import com.mbj.upbit.feature.util.formatted.CoinInfoFormatter.calculateBoxColor
 import com.mbj.upbit.feature.util.formatted.CoinInfoFormatter.calculateTextColor
 import com.mbj.upbit.feature.util.formatted.CoinInfoFormatter.formatChangePrice
 import com.mbj.upbit.feature.util.formatted.CoinInfoFormatter.formatChangeRate
 import com.mbj.upbit.feature.util.formatted.CoinInfoFormatter.formatCurrentPrice
 import com.mbj.upbit.feature.util.formatted.CoinInfoFormatter.formatMarketName
 import com.mbj.upbit.feature.util.formatted.CoinInfoFormatter.formatTradePrice
-import com.mbj.upbit.ui.theme.Blue900
+import com.mbj.upbit.ui.theme.CustomColors.Companion.Grey500
+import com.mbj.upbit.ui.theme.CustomColors.Companion.zeroChangeBoxColor
 import com.mbj.upbit.ui.theme.UpbitTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -57,7 +56,6 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-
             UpbitTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
@@ -85,6 +83,7 @@ fun FilterCoinInfo() {
             modifier = Modifier
                 .height(20.dp)
                 .fillMaxSize()
+                .padding(top = 2.dp)
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -93,6 +92,7 @@ fun FilterCoinInfo() {
                 Text(
                     text = stringResource(R.string.korean_name),
                     fontSize = 14.sp,
+                    color = Grey500
                 )
                 Column {
                     Icon(
@@ -114,6 +114,7 @@ fun FilterCoinInfo() {
                 Text(
                     text = stringResource(R.string.currency_price),
                     fontSize = 14.sp,
+                    color = Grey500
                 )
                 Column {
                     Icon(
@@ -132,6 +133,7 @@ fun FilterCoinInfo() {
                 Text(
                     text = stringResource(R.string.net_change),
                     fontSize = 14.sp,
+                    color = Grey500
                 )
                 Column {
                     Icon(
@@ -153,6 +155,7 @@ fun FilterCoinInfo() {
                 Text(
                     text = stringResource(R.string.trading_value),
                     fontSize = 14.sp,
+                    color = Grey500
                 )
                 Column {
                     Icon(
@@ -185,7 +188,6 @@ fun FilterCoinInfo() {
 fun CoinInfoItem(coinInfoDetail: CoinInfoDetail) {
 
     val textColor = calculateTextColor(coinInfoDetail.upbitTickerResponse.signedChangeRate)
-    val boxColor = calculateBoxColor(coinInfoDetail.upbitTickerResponse.signedChangeRate)
 
     Spacer(modifier = Modifier.padding(top = 2.dp))
     Row(
@@ -206,14 +208,14 @@ fun CoinInfoItem(coinInfoDetail: CoinInfoDetail) {
             Column(
                 verticalArrangement = Arrangement.Center,
                 modifier = Modifier
-                    .background(Blue900)
+                    .background(zeroChangeBoxColor)
                     .width(10.dp)
                     .height(22.dp)
             ) {
                 Spacer(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(boxColor)
+                        .background(textColor)
                         .height(2.dp)
                 )
             }
@@ -227,11 +229,6 @@ fun CoinInfoItem(coinInfoDetail: CoinInfoDetail) {
                         text = coinInfoDetail.coinInfo.koreanName,
                         fontSize = 12.sp,
                         modifier = Modifier.padding(end = 4.dp)
-                    )
-                    Icon(
-                        imageVector = Icons.Filled.Info,
-                        contentDescription = null,
-                        modifier = Modifier.size(12.dp)
                     )
                 }
                 Text(

@@ -1,7 +1,10 @@
 package com.mbj.upbit.feature.util.formatted
 
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
-import com.mbj.upbit.ui.theme.Orange700
+import com.mbj.upbit.ui.theme.CustomColors.Companion.Blue300
+import com.mbj.upbit.ui.theme.CustomColors.Companion.Orange700
+import com.mbj.upbit.ui.theme.CustomColors.Companion.zeroChangeTextColor
 import kotlin.math.round
 
 object CoinInfoFormatter {
@@ -64,19 +67,12 @@ object CoinInfoFormatter {
         return inputMarket
     }
 
+    @Composable
     fun calculateTextColor(changeRate: Double?): Color {
         return when {
-            changeRate!! < 0 -> Color.Blue
+            changeRate!! < 0 -> Blue300
             changeRate > 0 -> Orange700
-            else -> Color.Black
-        }
-    }
-
-    fun calculateBoxColor(changeRate: Double?): Color {
-        return when {
-            changeRate!! < 0 -> Color.Blue
-            changeRate > 0 -> Orange700
-            else -> Color.White
+            else -> zeroChangeTextColor
         }
     }
 }
