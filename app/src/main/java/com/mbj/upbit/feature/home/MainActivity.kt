@@ -3,7 +3,7 @@ package com.mbj.upbit.feature.home
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.viewModels
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -23,7 +23,6 @@ import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -41,11 +40,14 @@ import com.mbj.upbit.data.remote.model.CoinInfo
 import com.mbj.upbit.data.remote.model.CoinInfoDetail
 import com.mbj.upbit.data.remote.model.UpbitTickerResponse
 import com.mbj.upbit.feature.home.viewmodel.MainViewModel
+import com.mbj.upbit.feature.util.formatted.CoinInfoFormatter.calculateBoxColor
+import com.mbj.upbit.feature.util.formatted.CoinInfoFormatter.calculateTextColor
 import com.mbj.upbit.feature.util.formatted.CoinInfoFormatter.formatChangePrice
 import com.mbj.upbit.feature.util.formatted.CoinInfoFormatter.formatChangeRate
 import com.mbj.upbit.feature.util.formatted.CoinInfoFormatter.formatCurrentPrice
 import com.mbj.upbit.feature.util.formatted.CoinInfoFormatter.formatMarketName
 import com.mbj.upbit.feature.util.formatted.CoinInfoFormatter.formatTradePrice
+import com.mbj.upbit.ui.theme.Blue900
 import com.mbj.upbit.ui.theme.UpbitTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -182,6 +184,9 @@ fun FilterCoinInfo() {
 @Composable
 fun CoinInfoItem(coinInfoDetail: CoinInfoDetail) {
 
+    val textColor = calculateTextColor(coinInfoDetail.upbitTickerResponse.signedChangeRate)
+    val boxColor = calculateBoxColor(coinInfoDetail.upbitTickerResponse.signedChangeRate)
+
     Spacer(modifier = Modifier.padding(top = 2.dp))
     Row(
         horizontalArrangement = Arrangement.Start,
@@ -196,16 +201,25 @@ fun CoinInfoItem(coinInfoDetail: CoinInfoDetail) {
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .height(60.dp)
-                .width(120.dp)
+                .width(110.dp)
         ) {
-            Icon(
-                imageVector = Icons.Filled.Star,
-                contentDescription = null,
+            Column(
+                verticalArrangement = Arrangement.Center,
                 modifier = Modifier
-                    .size(20.dp)
-            )
+                    .background(Blue900)
+                    .width(10.dp)
+                    .height(22.dp)
+            ) {
+                Spacer(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(boxColor)
+                        .height(2.dp)
+                )
+            }
             Spacer(modifier = Modifier.padding(end = 4.dp))
-            Column( //코인명
+            Column(
+                //코인명
                 horizontalAlignment = Alignment.Start,
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -226,7 +240,8 @@ fun CoinInfoItem(coinInfoDetail: CoinInfoDetail) {
                 )
             }
         }
-        Column( //현재가
+        Column(
+            //현재가
             horizontalAlignment = Alignment.End,
             modifier = Modifier.width(65.dp),
         ) {
@@ -239,6 +254,7 @@ fun CoinInfoItem(coinInfoDetail: CoinInfoDetail) {
                     }
                 }",
                 fontSize = 12.sp,
+                color = textColor
             )
         }
         Spacer(modifier = Modifier.padding(end = 10.dp))
@@ -250,10 +266,12 @@ fun CoinInfoItem(coinInfoDetail: CoinInfoDetail) {
             Text(
                 text = "${formatChangeRate(coinInfoDetail.upbitTickerResponse.signedChangeRate)}%",
                 fontSize = 12.sp,
+                color = textColor
             )
             Text(
                 text = "${formatChangePrice(coinInfoDetail.upbitTickerResponse.signedChangePrice)}",
                 fontSize = 10.sp,
+                color = textColor
             )
         }
         Spacer(modifier = Modifier.padding(end = 10.dp))

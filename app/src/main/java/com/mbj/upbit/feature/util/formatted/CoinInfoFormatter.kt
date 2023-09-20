@@ -1,5 +1,7 @@
 package com.mbj.upbit.feature.util.formatted
 
+import androidx.compose.ui.graphics.Color
+import com.mbj.upbit.ui.theme.Orange700
 import kotlin.math.round
 
 object CoinInfoFormatter {
@@ -60,5 +62,21 @@ object CoinInfoFormatter {
             return "${parts[1]}/${parts[0]}"
         }
         return inputMarket
+    }
+
+    fun calculateTextColor(changeRate: Double?): Color {
+        return when {
+            changeRate!! < 0 -> Color.Blue
+            changeRate > 0 -> Orange700
+            else -> Color.Black
+        }
+    }
+
+    fun calculateBoxColor(changeRate: Double?): Color {
+        return when {
+            changeRate!! < 0 -> Color.Blue
+            changeRate > 0 -> Orange700
+            else -> Color.White
+        }
     }
 }
