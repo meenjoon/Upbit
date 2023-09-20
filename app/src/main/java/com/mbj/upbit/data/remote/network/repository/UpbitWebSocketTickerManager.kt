@@ -4,6 +4,7 @@ import android.util.Log
 import com.mbj.upbit.BuildConfig
 import com.mbj.upbit.data.remote.model.UpbitTickerResponse
 import com.mbj.upbit.data.remote.network.api.WebSocketManager
+import com.mbj.upbit.feature.home.common.UpbitWebSocketCallback
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
@@ -16,7 +17,7 @@ import okio.ByteString
 import java.nio.charset.StandardCharsets
 import java.util.UUID
 
-class UpbitWebSocketTickerManager(private val krwMarkets: String) : WebSocketManager {
+class UpbitWebSocketTickerManager(private val krwMarkets: String, private val callback: UpbitWebSocketCallback) : WebSocketManager {
     private val NORMAL_CLOSURE_STATUS = 1000
     private lateinit var webSocket: WebSocket
 
@@ -53,6 +54,7 @@ class UpbitWebSocketTickerManager(private val krwMarkets: String) : WebSocketMan
             val upbitTickerResponse = jsonString.fromJsonToUpbitTickerResponse()
             if (upbitTickerResponse != null) {
                 Log.d("Parsed response: ", "$upbitTickerResponse")
+                callback.onUpbitTickerResponseReceived(upbitTickerResponse)
             } else {
                 Log.d("Failed to parse response", "")
             }

@@ -37,5 +37,8 @@ data class UpbitTickerResponse(
     @Json(name = "timestamp") val timestamp: Long?,
     @Json(name = "acc_trade_price_24h") val accTradePrice24h: Double?,
     @Json(name = "acc_trade_volume_24h") val accTradeVolume24h: Double?,
-    @Json(name = "stream_type") val streamType: String?
-)
+    @Json(name = "stream_type") val streamType: String?,
+) {
+    val currentPrice: Double? = tradePrice
+    val tradeVolumeInKRW: Double? = tradePrice?.times(accTradeVolume ?: 0.0)
+}
