@@ -1,4 +1,4 @@
-package com.mbj.upbit.di
+package com.mbj.upbit.di.network
 
 import com.mbj.upbit.BuildConfig
 import com.mbj.upbit.data.remote.network.adapter.ApiCallAdapterFactory
