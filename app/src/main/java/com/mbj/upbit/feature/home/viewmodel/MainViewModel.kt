@@ -1,5 +1,8 @@
 package com.mbj.upbit.feature.home.viewmodel
 
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mbj.upbit.data.remote.model.CoinInfo
@@ -10,6 +13,8 @@ import com.mbj.upbit.data.remote.network.repository.CoinInfoRepository
 import com.mbj.upbit.data.remote.network.repository.UpbitWebSocketTickerManager
 import com.mbj.upbit.data.remote.network.repository.UpbitWebSocketTickerRepository
 import com.mbj.upbit.feature.home.common.UpbitWebSocketCallback
+import com.mbj.upbit.ui.theme.CustomColors.Companion.Blue300
+import com.mbj.upbit.ui.theme.CustomColors.Companion.Orange700
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -95,6 +100,17 @@ class MainViewModel @Inject constructor(
                 CoinInfoDetail(tickerData, coinInfo)
             }
         }
+    }
+
+    fun calculateBorderInfo(
+        currentPrice: Double,
+        previousPrice: Double
+    ): Pair<Dp, Color> {
+        val priceChanged = currentPrice != previousPrice
+        val borderThickness = if (priceChanged) 0.5.dp else 0.dp
+        val borderColor = if (currentPrice > previousPrice) Orange700 else Blue300
+
+        return Pair(borderThickness, borderColor)
     }
 
     override fun onUpbitTickerResponseReceived(response: UpbitTickerResponse) {

@@ -23,11 +23,17 @@ import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -49,6 +55,7 @@ import com.mbj.upbit.ui.theme.CustomColors.Companion.Grey500
 import com.mbj.upbit.ui.theme.CustomColors.Companion.zeroChangeBoxColor
 import com.mbj.upbit.ui.theme.UpbitTheme
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.delay
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -187,7 +194,21 @@ fun FilterCoinInfo() {
 @Composable
 fun CoinInfoItem(coinInfoDetail: CoinInfoDetail) {
 
+    val viewModel: MainViewModel = hiltViewModel()
+
     val textColor = calculateTextColor(coinInfoDetail.upbitTickerResponse.signedChangeRate)
+
+    var previousPrice by remember { mutableStateOf(coinInfoDetail.upbitTickerResponse.tradePrice) }
+    val currentPrice = coinInfoDetail.upbitTickerResponse.tradePrice
+    val (borderThickness, borderColor) = viewModel.calculateBorderInfo(currentPrice!!, previousPrice!!)
+    val priceChanged = currentPrice != previousPrice
+
+    if (priceChanged) {
+        LaunchedEffect(priceChanged) {
+            delay(400)
+            previousPrice = currentPrice
+        }
+    }
 
     Spacer(modifier = Modifier.padding(top = 2.dp))
     Row(
@@ -220,8 +241,7 @@ fun CoinInfoItem(coinInfoDetail: CoinInfoDetail) {
                 )
             }
             Spacer(modifier = Modifier.padding(end = 4.dp))
-            Column(
-                //코인명
+            Column( //코인명
                 horizontalAlignment = Alignment.Start,
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -237,10 +257,18 @@ fun CoinInfoItem(coinInfoDetail: CoinInfoDetail) {
                 )
             }
         }
-        Column(
-            //현재가
+        Column( // 현재가
             horizontalAlignment = Alignment.End,
-            modifier = Modifier.width(65.dp),
+            modifier = Modifier.width(65.dp)
+                .drawWithContent {
+                    drawContent()
+                    if (borderThickness > 0.dp) {
+                        drawRect(
+                            color = borderColor,
+                            style = Stroke(width = borderThickness.toPx())
+                        )
+                    }
+                }
         ) {
             Text(
                 text = "${
