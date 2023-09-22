@@ -224,7 +224,10 @@ fun FilterCoinInfo() {
             modifier = Modifier.padding(top = 4.dp)
         )
         LazyColumn {
-            items(currentCombinedDataList) { combinedData ->
+            items(
+                key = { it.upbitTickerResponse.code },
+                items = currentCombinedDataList
+            ) { combinedData ->
                 CoinInfoItem(coinInfoDetail = combinedData)
             }
         }
@@ -284,7 +287,8 @@ fun CoinInfoItem(coinInfoDetail: CoinInfoDetail) {
                 )
             }
             Spacer(modifier = Modifier.padding(end = 4.dp))
-            Column( //코인명
+            Column(
+                //코인명
                 horizontalAlignment = Alignment.Start,
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
