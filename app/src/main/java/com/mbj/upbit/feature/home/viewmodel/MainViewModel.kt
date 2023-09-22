@@ -7,13 +7,16 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mbj.upbit.data.remote.model.CoinInfo
 import com.mbj.upbit.data.remote.model.CoinInfoDetail
+import com.mbj.upbit.data.remote.model.FilterType
 import com.mbj.upbit.data.remote.model.UpbitTickerResponse
 import com.mbj.upbit.data.remote.network.adapter.ApiResultSuccess
 import com.mbj.upbit.data.remote.network.repository.CoinInfoRepository
 import com.mbj.upbit.data.remote.network.repository.UpbitWebSocketTickerManager
 import com.mbj.upbit.data.remote.network.repository.UpbitWebSocketTickerRepository
 import com.mbj.upbit.feature.home.common.UpbitWebSocketCallback
+import com.mbj.upbit.feature.util.formatted.CoinInfoFormatter
 import com.mbj.upbit.ui.theme.CustomColors.Companion.Blue300
+import com.mbj.upbit.ui.theme.CustomColors.Companion.Grey500
 import com.mbj.upbit.ui.theme.CustomColors.Companion.Orange700
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
@@ -34,19 +37,23 @@ class MainViewModel @Inject constructor(
 
     private lateinit var webSocketManager: UpbitWebSocketTickerRepository
 
-    val coinInfoList: StateFlow<List<CoinInfo>> = getCoinInfoList().stateIn(
+    private val coinInfoList: StateFlow<List<CoinInfo>> = getCoinInfoList().stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(500),
         initialValue = emptyList()
     )
 
-    private val _upbitTickerResponses =
-        MutableStateFlow<Map<String, UpbitTickerResponse>>(emptyMap())
-    val upbitTickerResponses: StateFlow<Map<String, UpbitTickerResponse>> =
-        _upbitTickerResponses.asStateFlow()
+    private val _upbitTickerResponses = MutableStateFlow<Map<String, UpbitTickerResponse>>(emptyMap())
+    private val upbitTickerResponses: StateFlow<Map<String, UpbitTickerResponse>> = _upbitTickerResponses.asStateFlow()
 
     private val _krwMarketString = MutableStateFlow("")
     private val krwMarketString: StateFlow<String> = _krwMarketString.asStateFlow()
+
+    private val _combinedDataList = MutableStateFlow<List<CoinInfoDetail>>(emptyList())
+    val combinedDataList: StateFlow<List<CoinInfoDetail>> = _combinedDataList.asStateFlow()
+
+    private val _filterType = MutableStateFlow(FilterType.NORMAL)
+    val filterType: StateFlow<FilterType> = _filterType
 
     init {
         viewModelScope.launch {
@@ -64,6 +71,14 @@ class MainViewModel @Inject constructor(
                         )
                     )
                     webSocketManager.startWebSocketConnection()
+                    _combinedDataList.value = combineTickerAndCoinInfo(upbitTickerResponses.value, coinInfoList.value)
+                }
+            }
+        }
+        viewModelScope.launch {
+            upbitTickerResponses.collectLatest { upbitTickerResponses ->
+                filterType.collectLatest { filterType ->
+                    _combinedDataList.value = applyFilterAndSort(filterType, upbitTickerResponses, coinInfoList.value)
                 }
             }
         }
@@ -91,7 +106,7 @@ class MainViewModel @Inject constructor(
         return krwMarkets.joinToString(",")
     }
 
-    fun combineTickerAndCoinInfo(
+    private fun combineTickerAndCoinInfo(
         upbitTickerResponses: Map<String, UpbitTickerResponse>,
         coinInfoList: List<CoinInfo>
     ): List<CoinInfoDetail> {
@@ -111,6 +126,128 @@ class MainViewModel @Inject constructor(
         val borderColor = if (currentPrice > previousPrice) Orange700 else Blue300
 
         return Pair(borderThickness, borderColor)
+    }
+
+    private fun applyFilterAndSort(
+        filterType: FilterType,
+        upbitTickerResponses: Map<String, UpbitTickerResponse>,
+        coinInfoList: List<CoinInfo>
+    ): List<CoinInfoDetail> {
+        return when (filterType) {
+            FilterType.NORMAL -> combineTickerAndCoinInfo(upbitTickerResponses, coinInfoList)
+            FilterType.CURRENCY_PRICE_ASC -> combineTickerAndCoinInfo(upbitTickerResponses, coinInfoList)
+                .sortedBy { it.upbitTickerResponse.tradePrice }
+            FilterType.CURRENCY_PRICE_DESC -> combineTickerAndCoinInfo(upbitTickerResponses, coinInfoList)
+                .sortedByDescending { it.upbitTickerResponse.tradePrice }
+            FilterType.CHANGE_PERCENTAGE_ASC -> combineTickerAndCoinInfo(upbitTickerResponses, coinInfoList)
+                .sortedByDescending { CoinInfoFormatter.formatChangeRate(it.upbitTickerResponse.signedChangeRate) }
+            FilterType.CHANGE_PERCENTAGE_DESC -> combineTickerAndCoinInfo(upbitTickerResponses, coinInfoList)
+                .sortedBy { CoinInfoFormatter.formatChangeRate(it.upbitTickerResponse.signedChangeRate) }
+            FilterType.TRADING_VOLUME_ASC -> combineTickerAndCoinInfo(upbitTickerResponses, coinInfoList)
+                .sortedBy { it.upbitTickerResponse.tradeVolumeInKRW?.let { CoinInfoFormatter.formatTradePrice(it) } }
+            FilterType.TRADING_VOLUME_DESC -> combineTickerAndCoinInfo(upbitTickerResponses, coinInfoList)
+                .sortedByDescending { it.upbitTickerResponse.tradeVolumeInKRW?.let { CoinInfoFormatter.formatTradePrice(it) } }
+        }
+    }
+
+    fun toggleCurrencyPriceFilter() {
+        _filterType.value = when (_filterType.value) {
+            FilterType.NORMAL -> FilterType.CURRENCY_PRICE_ASC
+            FilterType.CURRENCY_PRICE_ASC -> FilterType.CURRENCY_PRICE_DESC
+            FilterType.CURRENCY_PRICE_DESC -> FilterType.NORMAL
+            else -> FilterType.CURRENCY_PRICE_ASC
+        }
+    }
+
+    fun toggleChangePercentageFilter() {
+        _filterType.value = when (_filterType.value) {
+            FilterType.NORMAL -> FilterType.CHANGE_PERCENTAGE_ASC
+            FilterType.CHANGE_PERCENTAGE_ASC -> FilterType.CHANGE_PERCENTAGE_DESC
+            FilterType.CHANGE_PERCENTAGE_DESC -> FilterType.NORMAL
+            else -> FilterType.CHANGE_PERCENTAGE_ASC
+        }
+    }
+
+    fun toggleTradingVolumeFilter() {
+        _filterType.value = when (_filterType.value) {
+            FilterType.NORMAL -> FilterType.TRADING_VOLUME_ASC
+            FilterType.TRADING_VOLUME_ASC -> FilterType.TRADING_VOLUME_DESC
+            FilterType.TRADING_VOLUME_DESC -> FilterType.NORMAL
+            else -> FilterType.TRADING_VOLUME_ASC
+        }
+    }
+
+    fun getArrowIconBackground(filterType: Boolean): Color {
+        return when (filterType) {
+            true -> Blue300
+            false -> Grey500
+        }
+    }
+
+    fun isCurrencyPriceAsc(filterType: FilterType): Boolean {
+        return when (filterType) {
+            FilterType.CURRENCY_PRICE_ASC -> true
+            else -> false
+        }
+    }
+
+    fun isCurrencyPriceDesc(filterType: FilterType): Boolean {
+        return when (filterType) {
+            FilterType.CURRENCY_PRICE_DESC -> true
+            else -> false
+        }
+    }
+
+    fun isCurrencyPriceFilterActive(filterType: FilterType): Boolean {
+        return when (filterType) {
+            FilterType.CURRENCY_PRICE_ASC -> true
+            FilterType.CURRENCY_PRICE_DESC -> true
+            else -> false
+        }
+    }
+
+    fun isChangePercentageAsc(filterType: FilterType): Boolean {
+        return when (filterType) {
+            FilterType.CHANGE_PERCENTAGE_ASC -> true
+            else -> false
+        }
+    }
+
+    fun isChangePercentageDesc(filterType: FilterType): Boolean {
+        return when (filterType) {
+            FilterType.CHANGE_PERCENTAGE_DESC -> true
+            else -> false
+        }
+    }
+
+    fun isChangePercentageFilterActive(filterType: FilterType): Boolean {
+        return when (filterType) {
+            FilterType.CHANGE_PERCENTAGE_ASC -> true
+            FilterType.CHANGE_PERCENTAGE_DESC -> true
+            else -> false
+        }
+    }
+
+    fun isTradingVolumeAsc(filterType: FilterType): Boolean {
+        return when (filterType) {
+            FilterType.TRADING_VOLUME_ASC -> true
+            else -> false
+        }
+    }
+
+    fun isTradingVolumeDesc(filterType: FilterType): Boolean {
+        return when (filterType) {
+            FilterType.TRADING_VOLUME_DESC -> true
+            else -> false
+        }
+    }
+
+    fun isTradingVolumeFilterActive(filterType: FilterType): Boolean {
+        return when (filterType) {
+            FilterType.TRADING_VOLUME_ASC -> true
+            FilterType.TRADING_VOLUME_DESC -> true
+            else -> false
+        }
     }
 
     override fun onUpbitTickerResponseReceived(response: UpbitTickerResponse) {

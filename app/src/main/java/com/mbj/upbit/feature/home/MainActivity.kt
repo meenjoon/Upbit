@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -19,8 +20,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowLeft
-import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -79,18 +78,17 @@ class MainActivity : ComponentActivity() {
 fun FilterCoinInfo() {
     val viewModel: MainViewModel = hiltViewModel()
 
-    val upbitTickerResponses by viewModel.upbitTickerResponses.collectAsState(emptyMap())
-    val coinInfoList by viewModel.coinInfoList.collectAsState(emptyList())
-    val combinedDataList = viewModel.combineTickerAndCoinInfo(upbitTickerResponses, coinInfoList)
+    val currentCombinedDataList by viewModel.combinedDataList.collectAsState(emptyList())
+    val filterType by viewModel.filterType.collectAsState()
 
     Column {
         Row(
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.Top,
+            verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
-                .height(20.dp)
+                .height(36.dp)
                 .fillMaxSize()
-                .padding(top = 2.dp)
+                .padding(top = 4.dp, bottom = 8.dp)
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -101,18 +99,6 @@ fun FilterCoinInfo() {
                     fontSize = 14.sp,
                     color = Grey500
                 )
-                Column {
-                    Icon(
-                        imageVector = Icons.Filled.KeyboardArrowRight,
-                        contentDescription = null,
-                        modifier = Modifier.size(8.dp)
-                    )
-                    Icon(
-                        imageVector = Icons.Filled.KeyboardArrowLeft,
-                        contentDescription = null,
-                        modifier = Modifier.size(8.dp)
-                    )
-                }
             }
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -121,37 +107,74 @@ fun FilterCoinInfo() {
                 Text(
                     text = stringResource(R.string.currency_price),
                     fontSize = 14.sp,
-                    color = Grey500
+                    color = viewModel.getArrowIconBackground(
+                        viewModel.isCurrencyPriceFilterActive(
+                            filterType
+                        )
+                    ),
+                    modifier = Modifier
+                        .clickable {
+                            viewModel.toggleCurrencyPriceFilter()
+                        }
                 )
                 Column {
                     Icon(
                         imageVector = Icons.Filled.KeyboardArrowUp,
                         contentDescription = null,
-                        modifier = Modifier.size(8.dp)
+                        modifier = Modifier.size(12.dp),
+                        tint = viewModel.getArrowIconBackground(
+                            viewModel.isCurrencyPriceAsc(
+                                filterType
+                            )
+                        )
                     )
                     Icon(
                         imageVector = Icons.Filled.KeyboardArrowDown,
                         contentDescription = null,
-                        modifier = Modifier.size(8.dp)
+                        modifier = Modifier.size(12.dp),
+                        tint = viewModel.getArrowIconBackground(
+                            viewModel.isCurrencyPriceDesc(
+                                filterType
+                            )
+                        )
                     )
                 }
             }
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
                 Text(
                     text = stringResource(R.string.net_change),
                     fontSize = 14.sp,
-                    color = Grey500
+                    color = viewModel.getArrowIconBackground(
+                        viewModel.isChangePercentageFilterActive(
+                            filterType
+                        )
+                    ),
+                    modifier = Modifier.clickable {
+                        viewModel.toggleChangePercentageFilter()
+                    }
                 )
                 Column {
                     Icon(
                         imageVector = Icons.Filled.KeyboardArrowUp,
                         contentDescription = null,
-                        modifier = Modifier.size(8.dp)
+                        modifier = Modifier.size(12.dp),
+                        tint = viewModel.getArrowIconBackground(
+                            viewModel.isChangePercentageAsc(
+                                filterType
+                            )
+                        )
                     )
                     Icon(
                         imageVector = Icons.Filled.KeyboardArrowDown,
                         contentDescription = null,
-                        modifier = Modifier.size(8.dp)
+                        modifier = Modifier.size(12.dp),
+                        tint = viewModel.getArrowIconBackground(
+                            viewModel.isChangePercentageDesc(
+                                filterType
+                            )
+                        )
                     )
                 }
             }
@@ -162,18 +185,35 @@ fun FilterCoinInfo() {
                 Text(
                     text = stringResource(R.string.trading_value),
                     fontSize = 14.sp,
-                    color = Grey500
+                    color = viewModel.getArrowIconBackground(
+                        viewModel.isTradingVolumeFilterActive(
+                            filterType
+                        )
+                    ),
+                    modifier = Modifier.clickable {
+                        viewModel.toggleTradingVolumeFilter()
+                    }
                 )
                 Column {
                     Icon(
                         imageVector = Icons.Filled.KeyboardArrowUp,
                         contentDescription = null,
-                        modifier = Modifier.size(8.dp)
+                        modifier = Modifier.size(12.dp),
+                        tint = viewModel.getArrowIconBackground(
+                            viewModel.isTradingVolumeAsc(
+                                filterType
+                            )
+                        )
                     )
                     Icon(
                         imageVector = Icons.Filled.KeyboardArrowDown,
                         contentDescription = null,
-                        modifier = Modifier.size(8.dp)
+                        modifier = Modifier.size(12.dp),
+                        tint = viewModel.getArrowIconBackground(
+                            viewModel.isTradingVolumeDesc(
+                                filterType
+                            )
+                        )
                     )
                 }
             }
@@ -184,7 +224,7 @@ fun FilterCoinInfo() {
             modifier = Modifier.padding(top = 4.dp)
         )
         LazyColumn {
-            items(combinedDataList) { combinedData ->
+            items(currentCombinedDataList) { combinedData ->
                 CoinInfoItem(coinInfoDetail = combinedData)
             }
         }
@@ -200,7 +240,10 @@ fun CoinInfoItem(coinInfoDetail: CoinInfoDetail) {
 
     var previousPrice by remember { mutableStateOf(coinInfoDetail.upbitTickerResponse.tradePrice) }
     val currentPrice = coinInfoDetail.upbitTickerResponse.tradePrice
-    val (borderThickness, borderColor) = viewModel.calculateBorderInfo(currentPrice!!, previousPrice!!)
+    val (borderThickness, borderColor) = viewModel.calculateBorderInfo(
+        currentPrice!!,
+        previousPrice!!
+    )
     val priceChanged = currentPrice != previousPrice
 
     if (priceChanged) {
@@ -259,7 +302,8 @@ fun CoinInfoItem(coinInfoDetail: CoinInfoDetail) {
         }
         Column( // 현재가
             horizontalAlignment = Alignment.End,
-            modifier = Modifier.width(65.dp)
+            modifier = Modifier
+                .width(65.dp)
                 .drawWithContent {
                     drawContent()
                     if (borderThickness > 0.dp) {
@@ -286,7 +330,7 @@ fun CoinInfoItem(coinInfoDetail: CoinInfoDetail) {
 
         Column( //전일대비
             horizontalAlignment = Alignment.End,
-            modifier = Modifier.width(65.dp)
+            modifier = Modifier.width(75.dp)
         ) {
             Text(
                 text = "${formatChangeRate(coinInfoDetail.upbitTickerResponse.signedChangeRate)}%",
@@ -303,7 +347,9 @@ fun CoinInfoItem(coinInfoDetail: CoinInfoDetail) {
 
         Column( //거래대금
             horizontalAlignment = Alignment.End,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(end = 10.dp)
         ) {
             Text(
                 text = "${
