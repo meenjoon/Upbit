@@ -150,9 +150,9 @@ class MainViewModel @Inject constructor(
             FilterType.CHANGE_PERCENTAGE_DESC -> combineTickerAndCoinInfo(upbitTickerResponses, coinInfoList)
                 .sortedBy { CoinInfoFormatter.formatChangeRate(it.upbitTickerResponse.signedChangeRate) }
             FilterType.TRADING_VOLUME_ASC -> combineTickerAndCoinInfo(upbitTickerResponses, coinInfoList)
-                .sortedBy { it.upbitTickerResponse.tradeVolumeInKRW?.let { CoinInfoFormatter.formatTradePrice(it) } }
+                .sortedBy { it.upbitTickerResponse.tradeVolumeInKRW }
             FilterType.TRADING_VOLUME_DESC -> combineTickerAndCoinInfo(upbitTickerResponses, coinInfoList)
-                .sortedByDescending { it.upbitTickerResponse.tradeVolumeInKRW?.let { CoinInfoFormatter.formatTradePrice(it) } }
+                .sortedByDescending { it.upbitTickerResponse.tradeVolumeInKRW }
         }
     }
 
