@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -43,6 +44,7 @@ import com.mbj.upbit.R
 import com.mbj.upbit.data.remote.model.CoinInfo
 import com.mbj.upbit.data.remote.model.CoinInfoDetail
 import com.mbj.upbit.data.remote.model.UpbitTickerResponse
+import com.mbj.upbit.feature.component.loading.CircleIndicator
 import com.mbj.upbit.feature.home.viewmodel.MainViewModel
 import com.mbj.upbit.feature.util.formatted.CoinInfoFormatter.calculateTextColor
 import com.mbj.upbit.feature.util.formatted.CoinInfoFormatter.formatChangePrice
@@ -62,12 +64,24 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
+            val viewModel: MainViewModel = hiltViewModel()
+            val loadingState by viewModel.isLoading.collectAsState(true)
             UpbitTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colors.background
                 ) {
-                    FilterCoinInfo()
+                    Column(
+                        modifier = Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        if (loadingState) {
+                            LoadingScreen()
+                        } else {
+                            FilterCoinInfo()
+                        }
+                    }
                 }
             }
         }
@@ -374,6 +388,24 @@ fun CoinInfoItem(coinInfoDetail: CoinInfoDetail) {
         color = Color.DarkGray,
         thickness = 0.2.dp,
     )
+}
+
+@Composable
+fun LoadingScreen() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        CircleIndicator()
+    }
+}
+
+@Composable
+@Preview(showBackground = true)
+fun LoadingScreenPreview() {
+    UpbitTheme {
+        LoadingScreen()
+    }
 }
 
 @Composable

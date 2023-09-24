@@ -55,6 +55,12 @@ class MainViewModel @Inject constructor(
     private val _filterType = MutableStateFlow(FilterType.NORMAL)
     val filterType: StateFlow<FilterType> = _filterType
 
+    private val _isLoading = MutableStateFlow(true)
+    val isLoading: StateFlow<Boolean> = _isLoading
+
+    private val _isError = MutableStateFlow(false)
+    val isError: StateFlow<Boolean> = _isError
+
     init {
         viewModelScope.launch {
             coinInfoList.collectLatest { response ->
@@ -86,8 +92,8 @@ class MainViewModel @Inject constructor(
 
     private fun getCoinInfoList(): Flow<List<CoinInfo>> {
         return coinInfoRepository.getCoinInfoList(
-            onComplete = { },
-            onError = { }
+            onComplete = { _isLoading.value = false },
+            onError = { _isError.value = true}
         ).map { response ->
             when (response) {
                 is ApiResultSuccess -> response.data
