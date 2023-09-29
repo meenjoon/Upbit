@@ -24,7 +24,7 @@ class UpbitWebSocketTickerManager(private val krwMarkets: String, private val ca
     override fun startWebSocketConnection() {
         val client = OkHttpClient()
         val request = Request.Builder()
-            .url("${BuildConfig.UPBIT_BASE_URL}websocket/v1")
+            .url("https://api.upbit.com/websocket/v1")
             .build()
 
         webSocket = client.newWebSocket(request, UpbitWebSocketListener())

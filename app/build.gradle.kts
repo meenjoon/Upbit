@@ -7,9 +7,6 @@ plugins {
     id("dagger.hilt.android.plugin")
 }
 
-val properties = Properties()
-properties.load(rootProject.file("local.properties").inputStream())
-
 android {
     namespace = "com.mbj.upbit"
     compileSdk = 33
@@ -20,8 +17,6 @@ android {
         targetSdk = 33
         versionCode = 1
         versionName = "1.0"
-
-        buildConfigField("String", "UPBIT_BASE_URL", properties.getProperty("upbit_base_url"))
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -81,7 +76,7 @@ dependencies {
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-moshi:2.9.0")
 
-    //Moshi Converter
+    // Moshi Converter
     implementation("com.squareup.moshi:moshi:1.14.0")
     implementation("com.squareup.moshi:moshi-kotlin:1.9.3")
     kapt("com.squareup.moshi:moshi-kotlin-codegen:1.14.0")

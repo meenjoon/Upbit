@@ -45,7 +45,7 @@ object NetworkModule {
     @Provides
     fun provideRetrofit(okHttpClient: OkHttpClient, moshi: Moshi): Retrofit {
         return Retrofit.Builder()
-            .baseUrl(BuildConfig.UPBIT_BASE_URL)
+            .baseUrl("https://api.upbit.com/")
             .client(okHttpClient)
             .addConverterFactory(MoshiConverterFactory.create(moshi))
             .addCallAdapterFactory(ApiCallAdapterFactory.create())

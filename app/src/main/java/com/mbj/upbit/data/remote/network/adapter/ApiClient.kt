@@ -31,7 +31,7 @@ interface ApiClient {
                 .build()
 
             return Retrofit.Builder()
-                .baseUrl(BuildConfig.UPBIT_BASE_URL)
+                .baseUrl("https://api.upbit.com/")
                 .client(client)
                 .addConverterFactory(MoshiConverterFactory.create(moshi))
                 .addCallAdapterFactory(ApiCallAdapterFactory.create())
