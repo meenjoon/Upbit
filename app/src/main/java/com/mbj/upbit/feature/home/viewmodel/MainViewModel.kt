@@ -1,5 +1,6 @@
 package com.mbj.upbit.feature.home.viewmodel
 
+import android.util.Log
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -77,7 +78,6 @@ class MainViewModel @Inject constructor(
                         )
                     )
                     webSocketManager.startWebSocketConnection()
-                    _combinedDataList.value = combineTickerAndCoinInfo(upbitTickerResponses.value, coinInfoList.value)
                 }
             }
         }
