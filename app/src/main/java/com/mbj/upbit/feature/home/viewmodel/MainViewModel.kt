@@ -83,9 +83,7 @@ class MainViewModel @Inject constructor(
         }
         viewModelScope.launch {
             upbitTickerResponses.collectLatest { upbitTickerResponses ->
-                filterType.collectLatest { filterType ->
-                    _combinedDataList.value = applyFilterAndSort(filterType, upbitTickerResponses, coinInfoList.value)
-                }
+                _combinedDataList.value = applyFilterAndSort(filterType.value, upbitTickerResponses, coinInfoList.value)
             }
         }
     }
